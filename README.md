@@ -19,6 +19,7 @@ at the same time as walking out the door.
 | Undo (hold to rewind fast) | B | Z or Backspace |
 | Restart this run / clear echoes | SELECT | R |
 | Menu | START | Esc |
+| Show me how (once unlocked) | yellow **?** button | H |
 
 - **Plates** open the door with the same symbol while something stands on them.
 - **Numbered doors** do the opposite: they shut while their plate is held.
@@ -26,9 +27,13 @@ at the same time as walking out the door.
 - **Lasers** zap you, but not your echoes, and an echo in the way blocks the beam.
 - If there's nothing left to undo, **B** takes back your last echo.
 
+Stuck? After 3 restarts (or a couple of minutes) in a room, a yellow **? SHOW
+ME** button pops out of the screen: the room plays itself so you can watch
+how it's done, then it's your turn.
+
 16 rooms in 4 worlds. Clearing a room gives you a password for the next one
-(NES style), and progress is saved in your browser. Six colour palettes are in
-Options.
+(NES style), and progress is saved in your browser. In **Settings** you can
+pick the screen colours (6 palettes) and the console's colours (7 shells).
 
 ## Making it
 
@@ -48,6 +53,7 @@ npm run check:levels   # prove every room can be solved, and needs all its echoe
 - `src/game.js`: playing a room; `src/main.js`: the screens and menus
 - `src/render.js`, `src/sprites.js`, `src/font.js`: the 160x144 screen
 - `src/audio.js`: sound effects and music; `src/input.js`: buttons, keys, swipes
+- `src/shells.js`: console colour themes
 
 Deployed to Cloudflare Workers (static assets) on every push to `main`; see
 `wrangler.jsonc`.

@@ -21,6 +21,8 @@ export class Game {
     this.exitT = -1;       // >=0 while walking down the stairs
     this.done = false;     // set when the room is finished
     this.shake = 0;
+    this.retries = 0;      // restarts and zaps (unlocks the SHOW ME hint)
+    this.hintReady = false;
     this.rebuild();
   }
 
@@ -69,7 +71,7 @@ export class Game {
   }
 
   sounds(a, b, act) {
-    if (b.zapped) { sfx.zap(); this.shake = 0.3; return; }
+    if (b.zapped) { sfx.zap(); this.shake = 0.3; this.retries++; return; }
     const crateMoved = a.crates.some((c, i) => c.x !== b.crates[i].x || c.y !== b.crates[i].y);
     const opened = b.doorOpen.some((o, i) => o && !a.doorOpen[i]);
     const shut = b.doorOpen.some((o, i) => !o && a.doorOpen[i]);
@@ -109,8 +111,8 @@ export class Game {
   }
 
   reset() {
-    if (this.moves.length) { this.moves = []; this.rebuild(); sfx.back(); this.toast('RUN RESTARTED'); }
-    else if (this.runs.length) { this.runs = []; this.rebuild(); sfx.back(); this.toast('ECHOES CLEARED'); }
+    if (this.moves.length) { this.moves = []; this.rebuild(); sfx.back(); this.toast('RUN RESTARTED'); this.retries++; }
+    else if (this.runs.length) { this.runs = []; this.rebuild(); sfx.back(); this.toast('ECHOES CLEARED'); this.retries++; }
     else sfx.deny();
   }
 
@@ -237,6 +239,12 @@ export class Game {
     const n = this.def.echoes;
     for (let i = 0; i < n; i++) scr.spr(i < n - this.runs.length ? 'echo' : 'echoUsed', W - 34 - i * 9, 5, i < n - this.runs.length ? 0 : 2);
     scr.text(String(Math.min(99, this.state.tick)).padStart(2, '0'), W - 15, 5, 0);
+    // stuck? a blinking "?" says the SHOW ME hint is ready
+    if (this.hintReady && Math.floor(this.time * 2) % 2) {
+      const x = W - 46 - Math.max(0, n - 1) * 9;
+      scr.rect(x - 2, 3, 9, 11, 0);
+      scr.text('?', x, 5, 3);
+    }
     if (!n) scr.rect(W - 34, 8, 6, 1, 2);
   }
 

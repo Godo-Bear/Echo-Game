@@ -8,10 +8,12 @@ import { initInput, onButton, updateInput } from './input.js';
 import { sfx, playSong, setSound, setMusic, suspendAudio } from './audio.js';
 import { save, store } from './save.js';
 import { textWidth } from './font.js';
+import { SHELLS, applyShell } from './shells.js';
 
 const canvas = document.getElementById('screen');
 const scr = new Screen(canvas);
 scr.setPalette(save.palette);
+applyShell(save.shell);
 setSound(save.sound);
 setMusic(save.music);
 
@@ -29,7 +31,8 @@ function optionItems() {
   return [
     { label: () => `SOUND: ${save.sound ? 'ON' : 'OFF'}`, act: () => { save.sound = !save.sound; setSound(save.sound); store(); } },
     { label: () => `MUSIC: ${save.music ? 'ON' : 'OFF'}`, act: () => { save.music = !save.music; setMusic(save.music); store(); } },
-    { label: () => `COLORS: ${PALETTES[save.palette].name}`, act: (d = 1) => { save.palette = (save.palette + d + PALETTES.length) % PALETTES.length; scr.setPalette(save.palette); store(); } },
+    { label: () => `SCREEN: ${PALETTES[save.palette].name}`, act: (d = 1) => { save.palette = (save.palette + d + PALETTES.length) % PALETTES.length; scr.setPalette(save.palette); store(); } },
+    { label: () => `CONSOLE: ${SHELLS[save.shell].name}`, act: (d = 1) => { save.shell = (save.shell + d + SHELLS.length) % SHELLS.length; applyShell(save.shell); store(); } },
   ];
 }
 
@@ -62,7 +65,7 @@ function titleScene() {
     { label: started ? 'CONTINUE' : 'START', act: () => { const i = firstUnfinished(); go(introScene(i)); } },
     { label: 'ROOMS', act: () => go(levelsScene(firstUnfinished())) },
     { label: 'PASSWORD', act: () => go(passwordScene()) },
-    { label: 'OPTIONS', act: () => go(optionsScene(titleScene)) },
+    { label: 'SETTINGS', act: () => go(optionsScene(titleScene)) },
   ]);
   let t = 0;
   return {
@@ -95,23 +98,27 @@ function firstUnfinished() {
   return Math.min(save.unlocked, LEVELS.length - 1);
 }
 
-// ---------- options ----------
+// ---------- settings ----------
 function optionsScene(back) {
-  const items = optionItems().map((it) => ({ ...it, side: true }));
-  items.push({ label: 'BACK', act: () => go(back()) });
-  const m = menu(items);
+  // look first: screen colours, then the console around it
+  const [sound, music, screen, shell] = optionItems().map((it) => ({ ...it, side: true }));
+  const m = menu([screen, shell, sound, music, { label: 'BACK', act: () => go(back()) }]);
+  let t = 0;
   return {
-    update() {},
+    update(dt) { t += dt; },
     input(btn) { if (btn === 'b' || btn === 'start') { sfx.back(); go(back()); } else m.input(btn); },
     draw() {
       scr.clear(0);
       scr.rect(0, 0, W, 16, 3);
-      scr.textC('OPTIONS', 5, 0);
-      m.draw(36, 34, 14);
-      scr.textC('← → TO CHANGE', 112, 2);
-      // palette preview
-      PALETTES[save.palette].c.forEach((_, k) => scr.rect(56 + k * 12, 124, 12, 8, k));
-      scr.frame(55, 123, 50, 10, 3);
+      scr.textC('SETTINGS', 5, 0);
+      m.draw(30, 26, 13);
+      // a little room in the chosen colours
+      const y = 98;
+      for (let x = 0; x < 5; x++) scr.spr(x === 0 || x === 4 ? 'wall' : x === 3 ? 'exit0' : 'floor', 40 + x * 16, y);
+      scr.spr(`hero_R${Math.floor(t * 3) % 2}`, 72, y - 1);
+      scr.spr('ghost_R0', 56, y - (Math.floor(t * 2) % 2));
+      scr.frame(39, y - 1, 82, 18, 3);
+      scr.textC(m.i < 2 ? '← → TO CHANGE' : '← → OR A TO SWITCH', 128, 2);
     },
   };
 }
@@ -220,26 +227,42 @@ function introScene(i) {
 }
 
 // ---------- playing a room ----------
-function playScene(i) {
+// `tries` carries over when the room is restarted, so the SHOW ME hint
+// unlocks after a few restarts (or after a while in the room).
+const HINT_TRIES = 3, HINT_TIME = 150;
+
+function playScene(i, tries = 0) {
   const game = new Game(LEVELS[i], i);
-  let paused = null;   // pause menu
+  game.hintReady = tries >= HINT_TRIES; // already unlocked: no need to say so again
+  let paused = null;   // pause menu (or its settings page)
   let hint = false;    // showing the hint box
   let cleared = 0;     // time since the room was cleared
-  const pauseMenu = () => {
-    const items = [
-      { label: 'RESUME', act: () => { paused = null; } },
-      { label: 'HINT', act: () => { hint = true; } },
-      { label: 'RESTART ROOM', act: () => { paused = null; go(playScene(i)); } },
-      { label: 'ROOMS', act: () => go(levelsScene(i)) },
-      ...optionItems().map((it) => ({ ...it, side: true })),
-      { label: 'TITLE', act: () => go(titleScene()) },
-    ];
-    return menu(items);
+  let time = 0;
+  const totalTries = () => tries + game.retries;
+  const showMe = () => go(demoScene(i, totalTries()));
+  const pauseMenu = () => menu([
+    { label: 'RESUME', act: () => { paused = null; } },
+    { label: 'HINT', act: () => { hint = true; } },
+    ...(game.hintReady ? [{ label: 'SHOW ME HOW', act: showMe }] : []),
+    { label: 'RESTART ROOM', act: () => { paused = null; go(playScene(i, totalTries() + 1)); } },
+    { label: 'ROOMS', act: () => go(levelsScene(i)) },
+    { label: 'SETTINGS', act: () => { paused = settingsMenu(); } },
+    { label: 'TITLE', act: () => go(titleScene()) },
+  ]);
+  const settingsMenu = () => {
+    const [sound, music, screen, shell] = optionItems().map((it) => ({ ...it, side: true }));
+    return menu([screen, shell, sound, music, { label: 'BACK', act: () => { paused = pauseMenu(); } }], { settings: true });
   };
   return {
+    hintReady: () => game.hintReady && !game.done,
     update(dt) {
       if (paused) return;
       game.update(dt);
+      time += dt;
+      if (!game.hintReady && !game.done && (totalTries() >= HINT_TRIES || time >= HINT_TIME)) {
+        game.hintReady = true;
+        game.toast('STUCK? TRY THE ? BUTTON');
+      }
       if (game.done) {
         if (!cleared) {
           save.done[i] = true;
@@ -252,7 +275,11 @@ function playScene(i) {
     input(btn) {
       if (hint) { hint = false; sfx.back(); return; }
       if (paused) {
-        if (btn === 'start' || btn === 'b') { paused = null; sfx.back(); return; }
+        if (btn === 'start' || btn === 'b') {
+          sfx.back();
+          paused = paused.settings ? pauseMenu() : null;
+          return;
+        }
         paused.input(btn);
         return;
       }
@@ -263,6 +290,7 @@ function playScene(i) {
         }
         return;
       }
+      if (btn === 'hint') { if (game.hintReady) { sfx.ok(); showMe(); } return; }
       if (btn === 'start') { paused = pauseMenu(); sfx.ok(); return; }
       if (btn === 'tap') return;
       game.input(btn);
@@ -278,15 +306,59 @@ function playScene(i) {
         if (blink(cleared)) scr.textC('PRESS A', 98, 3);
       }
       if (paused) {
-        scr.box(20, 18, 120, 108);
-        scr.textC('PAUSED', 25, 3);
-        paused.draw(38, 38, 10);
+        scr.box(16, 18, 128, 108);
+        scr.textC(paused.settings ? 'SETTINGS' : 'PAUSED', 25, 3);
+        paused.draw(paused.settings ? 30 : 38, 40, paused.settings ? 13 : 11);
       }
       if (hint) {
         scr.box(8, 30, 144, 84);
         scr.textC('HINT', 36, 2);
         scr.para(LEVELS[i].hint, 48, 3, 132);
       }
+    },
+  };
+}
+
+// ---------- SHOW ME: the room plays itself ----------
+function demoScene(i, tries) {
+  const def = LEVELS[i];
+  const game = new Game(def, i);
+  const BTN = { U: 'up', D: 'down', L: 'left', R: 'right', W: 'wait' };
+  // every move of every run, with an ECHO between runs
+  const steps = [];
+  def.solution.forEach((run, r) => {
+    for (const c of run) steps.push({ btn: BTN[c], run: r });
+    if (r < def.solution.length - 1) steps.push({ btn: 'a', run: r, pause: true });
+  });
+  let k = 0, wait = 0.8, t = 0;
+  const back = () => { sfx.ok(); go(playScene(i, tries)); };
+  return {
+    update(dt) {
+      t += dt;
+      game.update(dt);
+      if (game.busy || k >= steps.length) return;
+      wait -= dt;
+      if (wait > 0) return;
+      const st = steps[k++];
+      game.input(st.btn);
+      wait = st.pause ? 0.9 : (steps[k]?.btn === 'a' ? 0.7 : 0.26);
+    },
+    input(btn) { if (CONFIRM.has(btn) || btn === 'b' || btn === 'hint') back(); },
+    draw() {
+      game.draw(scr);
+      // a banner saying what's happening
+      const run = Math.min(def.solution.length - 1, steps[Math.max(0, k - 1)]?.run ?? 0);
+      const last = run === def.solution.length - 1;
+      const label = def.solution.length === 1 ? 'WATCH HOW' : last ? 'NOW THE REAL RUN' : `RUN ${run + 1}: YOUR ECHO WILL COPY IT`;
+      scr.rect(0, 16, W, 11, 0);
+      scr.rect(0, 27, W, 1, 3);
+      scr.textC(label, 18, 3);
+      if (game.done) {
+        scr.box(20, 46, 120, 52);
+        scr.textC('YOUR TURN!', 56, 3);
+        scr.textC('TRY IT YOURSELF', 68, 2);
+        if (blink(t)) scr.textC('PRESS A', 82, 3);
+      } else if (blink(t, 1)) scr.text('A: SKIP', 4, 134, 0);
     },
   };
 }
@@ -342,6 +414,7 @@ function tick(dt) {
   }
   scene.update(dt);
   scene.draw();
+  document.body.classList.toggle('hint-ready', !trans && !!scene.hintReady?.());
   scr.fade(Math.max(0, Math.min(3, fadeAmt)));
 }
 requestAnimationFrame(frame);

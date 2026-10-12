@@ -1,7 +1,9 @@
 /* The handheld console around the game screen. */
 :root {
   --page: #1d1e26;
+  --shell-light: #e2dfd6;
   --shell: #d8d5cc;
+  --pill: #8c8a94;
   --shell-dark: #b9b5aa;
   --bezel: #5c5e6c;
   --ink: #33378a;
@@ -14,6 +16,7 @@
 html, body { height: 100%; }
 body {
   background: var(--page);
+  transition: background .3s;
   font-family: ui-rounded, 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
   overflow: hidden;
   touch-action: none;
@@ -29,7 +32,8 @@ body {
   height: 100dvh;
   max-width: 480px;
   margin: 0 auto;
-  background: linear-gradient(160deg, #e2dfd6, var(--shell) 40%, var(--shell-dark));
+  background: linear-gradient(160deg, var(--shell-light), var(--shell) 40%, var(--shell-dark));
+  transition: background .3s;
   padding: max(12px, env(safe-area-inset-top)) 16px max(10px, env(safe-area-inset-bottom));
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -45,6 +49,7 @@ body {
 
 #screen-area { grid-area: screen; min-height: 0; display: flex; align-items: center; justify-content: center; }
 #bezel {
+  position: relative;
   background: var(--bezel);
   border-radius: 10px 10px 36px 10px;
   padding: 8px 18px 18px;
@@ -63,6 +68,23 @@ body {
   background: #e0f8d0;
   touch-action: none;
 }
+
+/* the SHOW ME hint button: pops out of the bezel once you've had a few tries */
+#hint-btn {
+  position: absolute; right: -10px; top: -12px;
+  display: none; align-items: center; gap: 5px;
+  height: 30px; padding: 0 12px 0 10px; border: 0; border-radius: 15px;
+  background: #ffd84a; color: #3a2a00;
+  font: 900 17px/1 system-ui, sans-serif;
+  box-shadow: 0 3px 0 #b8901a, 0 0 0 3px rgba(255, 216, 74, .35);
+  cursor: pointer; touch-action: none;
+  animation: hint-pop .35s ease-out, hint-glow 1.4s ease-in-out .35s infinite;
+}
+#hint-btn span { font-size: 10px; letter-spacing: .1em; }
+#hint-btn.held { transform: translateY(2px); box-shadow: 0 1px 0 #b8901a; }
+body.hint-ready #hint-btn { display: flex; }
+@keyframes hint-pop { from { transform: scale(0); } to { transform: scale(1); } }
+@keyframes hint-glow { 50% { box-shadow: 0 3px 0 #b8901a, 0 0 0 7px rgba(255, 216, 74, .15); } }
 
 #brand {
   grid-area: brand;
@@ -115,7 +137,8 @@ body {
 .round button {
   width: min(15vw, 58px); height: min(15vw, 58px);
   border-radius: 50%; border: 0;
-  background: radial-gradient(circle at 35% 30%, #c2447a, var(--button) 60%);
+  background: var(--button);
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--button), white 25%), var(--button) 60%);
   box-shadow: 0 4px 0 var(--button-dark), 0 6px 8px rgba(0, 0, 0, .25);
   color: rgba(255, 255, 255, .35); font: 900 16px system-ui, sans-serif;
   touch-action: none; cursor: pointer;
@@ -128,7 +151,8 @@ body {
 .pill { display: flex; flex-direction: column; align-items: center; gap: 4px; transform: rotate(-22deg); }
 .pill button {
   width: 48px; height: 14px; border-radius: 8px; border: 0;
-  background: #8c8a94; box-shadow: 0 2px 0 #5d5c63;
+  background: var(--pill); box-shadow: 0 2px 0 rgba(0, 0, 0, .3);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--pill), black 35%);
   touch-action: none; cursor: pointer;
 }
 .pill button.held { transform: translateY(2px); box-shadow: none; }

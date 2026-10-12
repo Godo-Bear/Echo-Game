@@ -80,7 +80,7 @@ export const LEVELS = [
     name: 'HEAVY',
     code: 'BOXY',
     echoes: 0,
-    hint: 'PUSH CRATES BY WALKING INTO THEM. A CRATE KEEPS A PLATE PRESSED.',
+    hint: 'PUSH CRATES BY WALKING INTO THEM. A CRATE KEEPS A PLATE PRESSED. MADE A MISTAKE? B UNDOES IT.',
     map: [
       '##########',
       '#P.......#',
@@ -96,7 +96,7 @@ export const LEVELS = [
     name: 'TEAMWORK',
     code: 'PALS',
     echoes: 1,
-    hint: 'YOU CAN UNDO WITH B. IF THERE IS NOTHING TO UNDO, B TAKES BACK YOUR LAST ECHO.',
+    hint: 'THE CRATE IS LOCKED IN. LET AN ECHO HOLD THE DOOR OPEN WHILE YOU GO IN AND PUSH THE CRATE ONTO THE OTHER PLATE.',
     map: [
       '##########',
       '#P..#....#',

@@ -18,6 +18,8 @@ The hook: pressing ECHO rewinds the room and a ghost replays your last run.
   finds the shortest final run for given echo runs (handy when designing).
 - Each new room should teach or combine ideas; keep the difficulty curve
   gentle and give each room a short hint (shown on its intro card).
-- New rooms need a unique 4-letter `code` (password).
+- New rooms need a unique 4-letter `code` (password). The `solution` is
+  also what the SHOW ME hint demo plays, so keep it short and clear.
+- Console colours live in `src/shells.js`, screen palettes in `src/render.js`.
 - Commit and push to `main` when done: Cloudflare (`wrangler.jsonc`) builds
   and deploys it to https://echo-game.jaydennarayan5.workers.dev

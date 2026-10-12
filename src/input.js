@@ -11,6 +11,7 @@ const KEYS = {
   KeyE: 'a', KeyX: 'a', Enter: 'a', NumpadEnter: 'a',
   KeyZ: 'b', KeyU: 'b', Backspace: 'b',
   KeyR: 'select', ShiftLeft: 'select', ShiftRight: 'select',
+  KeyH: 'hint', Slash: 'hint',
   Escape: 'start', KeyP: 'start', Tab: 'start',
 };
 const REPEATS = new Set(['up', 'down', 'left', 'right', 'wait', 'b']);
