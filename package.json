@@ -1,0 +1,16 @@
+{
+  "name": "echo",
+  "version": "0.1.0",
+  "description": "Echo - a retro Game Boy-style puzzle game where ghosts of your past attempts help you solve each room.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "check:levels": "node scripts/check-levels.mjs"
+  },
+  "devDependencies": {
+    "vite": "^8.3.1"
+  }
+}

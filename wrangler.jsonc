@@ -1,0 +1,10 @@
+// Cloudflare Workers config: `npx wrangler deploy` builds the game with Vite
+// and publishes the dist/ folder as a static site at
+// https://echo-game.jaydennarayan5.workers.dev
+{
+  "name": "echo-game",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": true,
+  "build": { "command": "npm run build" },
+  "assets": { "directory": "./dist" }
+}

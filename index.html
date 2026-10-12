@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Echo</title>
+  <meta name="description" content="Echo: a retro pocket puzzle game. Every time you echo, a ghost of your last attempt replays it beside you." />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" href="./icon-180.png" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <meta name="theme-color" content="#1d1e26" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Echo" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+</head>
+<body>
+  <main id="console">
+    <div id="screen-area">
+      <section id="bezel">
+        <div id="bezel-label"><i class="led"></i><span>ECHO &middot; POCKET PUZZLER</span></div>
+        <canvas id="screen" aria-label="Game screen"></canvas>
+      </section>
+    </div>
+    <div id="brand">ECHO<small>a puzzle in time</small></div>
+
+    <div id="dpad" role="group" aria-label="Direction pad (middle: wait)">
+      <div class="arm up" data-btn="up"></div>
+      <div class="arm left" data-btn="left"></div>
+      <div class="hub" data-btn="wait"><i></i></div>
+      <div class="arm right" data-btn="right"></div>
+      <div class="arm down" data-btn="down"></div>
+      <span class="label">MIDDLE = WAIT</span>
+    </div>
+
+    <div id="ab">
+      <div class="round b"><button data-btn="b" aria-label="B: undo">B</button><span>UNDO</span></div>
+      <div class="round a"><button data-btn="a" aria-label="A: echo">A</button><span>ECHO</span></div>
+    </div>
+
+    <div id="pills">
+      <div class="pill"><button data-btn="select" aria-label="Select: restart run"></button><span>RESET</span></div>
+      <div class="pill"><button data-btn="start" aria-label="Start: menu"></button><span>MENU</span></div>
+    </div>
+
+    <p id="keys">Arrows / WASD move &middot; Space wait &middot; E echo &middot; Z undo &middot; R reset &middot; Esc menu</p>
+  </main>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
