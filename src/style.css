@@ -69,23 +69,6 @@ body {
   touch-action: none;
 }
 
-/* the SHOW ME hint button: pops out of the bezel once you've had a few tries */
-#hint-btn {
-  position: absolute; right: -10px; top: -12px;
-  display: none; align-items: center; gap: 5px;
-  height: 30px; padding: 0 12px 0 10px; border: 0; border-radius: 15px;
-  background: #ffd84a; color: #3a2a00;
-  font: 900 17px/1 system-ui, sans-serif;
-  box-shadow: 0 3px 0 #b8901a, 0 0 0 3px rgba(255, 216, 74, .35);
-  cursor: pointer; touch-action: none;
-  animation: hint-pop .35s ease-out, hint-glow 1.4s ease-in-out .35s infinite;
-}
-#hint-btn span { font-size: 10px; letter-spacing: .1em; }
-#hint-btn.held { transform: translateY(2px); box-shadow: 0 1px 0 #b8901a; }
-body.hint-ready #hint-btn { display: flex; }
-@keyframes hint-pop { from { transform: scale(0); } to { transform: scale(1); } }
-@keyframes hint-glow { 50% { box-shadow: 0 3px 0 #b8901a, 0 0 0 7px rgba(255, 216, 74, .15); } }
-
 #brand {
   grid-area: brand;
   color: var(--ink);

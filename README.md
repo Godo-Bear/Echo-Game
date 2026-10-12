@@ -19,7 +19,7 @@ at the same time as walking out the door.
 | Undo (hold to rewind fast) | B | Z or Backspace |
 | Restart this run / clear echoes | SELECT | R |
 | Menu | START | Esc |
-| Show me how (once unlocked) | yellow **?** button | H |
+| Show me how (once unlocked) | tap **? SHOW ME** at the top of the screen | H |
 
 - **Plates** open the door with the same symbol while something stands on them.
 - **Numbered doors** do the opposite: they shut while their plate is held.
@@ -27,8 +27,8 @@ at the same time as walking out the door.
 - **Lasers** zap you, but not your echoes, and an echo in the way blocks the beam.
 - If there's nothing left to undo, **B** takes back your last echo.
 
-Stuck? After 3 restarts (or a couple of minutes) in a room, a yellow **? SHOW
-ME** button pops out of the screen: the room plays itself so you can watch
+Stuck? After 3 restarts (or a couple of minutes) in a room, the room name at
+the top of the screen turns into a blinking **? SHOW ME** button: the room plays itself so you can watch
 how it's done, then it's your turn.
 
 16 rooms in 4 worlds. Clearing a room gives you a password for the next one

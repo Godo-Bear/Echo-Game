@@ -254,14 +254,13 @@ function playScene(i, tries = 0) {
     return menu([screen, shell, sound, music, { label: 'BACK', act: () => { paused = pauseMenu(); } }], { settings: true });
   };
   return {
-    hintReady: () => game.hintReady && !game.done,
     update(dt) {
       if (paused) return;
       game.update(dt);
       time += dt;
       if (!game.hintReady && !game.done && (totalTries() >= HINT_TRIES || time >= HINT_TIME)) {
         game.hintReady = true;
-        game.toast('STUCK? TRY THE ? BUTTON');
+        game.toast('STUCK? TAP SHOW ME');
       }
       if (game.done) {
         if (!cleared) {
@@ -272,7 +271,7 @@ function playScene(i, tries = 0) {
         cleared += dt;
       }
     },
-    input(btn) {
+    input(btn, at) {
       if (hint) { hint = false; sfx.back(); return; }
       if (paused) {
         if (btn === 'start' || btn === 'b') {
@@ -290,7 +289,8 @@ function playScene(i, tries = 0) {
         }
         return;
       }
-      if (btn === 'hint') { if (game.hintReady) { sfx.ok(); showMe(); } return; }
+      const tappedShowMe = btn === 'tap' && at && at.y < 17;
+      if (btn === 'hint' || tappedShowMe) { if (game.hintReady) { sfx.ok(); showMe(); } return; }
       if (btn === 'start') { paused = pauseMenu(); sfx.ok(); return; }
       if (btn === 'tap') return;
       game.input(btn);
@@ -388,7 +388,7 @@ function endingScene() {
 }
 
 // ---------- main loop ----------
-onButton((btn) => { if (!trans && scene) scene.input(btn); });
+onButton((btn, at) => { if (!trans && scene) scene.input(btn, at); });
 initInput(canvas);
 
 scene = titleScene();
@@ -414,7 +414,6 @@ function tick(dt) {
   }
   scene.update(dt);
   scene.draw();
-  document.body.classList.toggle('hint-ready', !trans && !!scene.hintReady?.());
   scr.fade(Math.max(0, Math.min(3, fadeAmt)));
 }
 requestAnimationFrame(frame);

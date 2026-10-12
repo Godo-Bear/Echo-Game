@@ -2,6 +2,7 @@
 import { parseLevel, initialState, simulate, step, nextGhostActs, tileAt } from './sim.js';
 import { sfx } from './audio.js';
 import { W } from './render.js';
+import { textWidth } from './font.js';
 
 const TWEEN = 0.11;
 const ARROW = { U: 'arrowU', D: 'arrowD', L: 'arrowL', R: 'arrowR' };
@@ -234,17 +235,18 @@ export class Game {
   drawHud(scr) {
     scr.rect(0, 0, W, 16, 3);
     scr.text(String(this.index + 1).padStart(2, '0'), 4, 5, 0);
-    scr.text(this.def.name, 20, 5, 1);
-    // echoes left
     const n = this.def.echoes;
+    if (this.hintReady) {
+      // stuck? the room name becomes a SHOW ME button (tap the top bar)
+      const label = '? SHOW ME', w = textWidth(label) + 8;
+      const on = Math.floor(this.time * 2.5) % 2;
+      scr.rect(18, 2, w, 12, on ? 0 : 1);
+      scr.frame(18, 2, w, 12, on ? 1 : 0);
+      scr.text(label, 22, 5, 3);
+    } else scr.text(this.def.name, 20, 5, 1);
+    // echoes left
     for (let i = 0; i < n; i++) scr.spr(i < n - this.runs.length ? 'echo' : 'echoUsed', W - 34 - i * 9, 5, i < n - this.runs.length ? 0 : 2);
     scr.text(String(Math.min(99, this.state.tick)).padStart(2, '0'), W - 15, 5, 0);
-    // stuck? a blinking "?" says the SHOW ME hint is ready
-    if (this.hintReady && Math.floor(this.time * 2) % 2) {
-      const x = W - 46 - Math.max(0, n - 1) * 9;
-      scr.rect(x - 2, 3, 9, 11, 0);
-      scr.text('?', x, 5, 3);
-    }
     if (!n) scr.rect(W - 34, 8, 6, 1, 2);
   }
 

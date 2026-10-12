@@ -114,7 +114,12 @@ export function initInput(screenEl) {
     const dx = e.clientX - sw.x, dy = e.clientY - sw.y;
     sw = null;
     const d = Math.hypot(dx, dy);
-    if (d < 18) { handler('tap'); return; }
+    if (d < 18) {
+      // where on the 160x144 screen the tap was
+      const r = screenEl.getBoundingClientRect();
+      handler('tap', { x: ((e.clientX - r.left) / r.width) * screenEl.width, y: ((e.clientY - r.top) / r.height) * screenEl.height });
+      return;
+    }
     if (Math.abs(dx) > Math.abs(dy)) handler(dx > 0 ? 'right' : 'left');
     else handler(dy > 0 ? 'down' : 'up');
   });
