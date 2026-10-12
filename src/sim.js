@@ -11,6 +11,8 @@
 //   1 2 3  reverse doors: CLOSED while every plate of a / b / c is pressed
 //   o  crate (push it; it holds plates down and blocks lasers)
 //   > < ^ v  laser emitters, firing that way
+//   R L U D  one-way arrows: can only be stepped onto (or pushed onto) going
+//            that way. Leaving them is free; lasers pass over them.
 //
 // Each turn: echoes move first (oldest first), then you. Doors use the state
 // they had at the start of the turn, so what you see is what you get. A door
@@ -41,6 +43,7 @@ export function parseLevel(def) {
       else if ('abc'.includes(c)) { t = { k: 'plate', ch: c }; plates.push({ x, y, ch: c }); }
       else if ('ABC'.includes(c)) { t = { k: 'door', ch: c.toLowerCase(), inv: false, i: doors.length }; doors.push({ x, y, ch: c.toLowerCase(), inv: false }); }
       else if ('123'.includes(c)) { const ch = 'abc'['123'.indexOf(c)]; t = { k: 'door', ch, inv: true, i: doors.length }; doors.push({ x, y, ch, inv: true }); }
+      else if ('RLUD'.includes(c)) t = { k: 'oneway', dir: c };
       else if (EMIT[c]) { t = { k: 'emitter', dir: EMIT[c] }; emitters.push({ x, y, dir: EMIT[c] }); }
       else if (c !== '.') throw new Error(`Unknown map character "${c}" in level "${def.name}"`);
       row.push(t);
@@ -61,9 +64,11 @@ const crateIndex = (s, x, y) => s.crates.findIndex((c) => c.x === x && c.y === y
 const bodyAt = (s, x, y) => (s.player.x === x && s.player.y === y) || s.ghosts.some((g) => g.x === x && g.y === y);
 
 // Can something walk (or be pushed) into this tile, ignoring crates and bodies?
-function open(lv, s, x, y) {
+// `dir` is the way you're moving (left out for laser beams).
+function open(lv, s, x, y, dir) {
   const t = tileAt(lv, x, y);
   if (solid(t)) return false;
+  if (dir && t.k === 'oneway' && t.dir !== dir) return false;
   if (t.k === 'door' && !s.doorOpen[t.i]) return false;
   return true;
 }
@@ -73,11 +78,11 @@ function tryMove(lv, s, body, a) {
   if (a === 'W') return true;
   const [dx, dy] = DIRS[a];
   const x = body.x + dx, y = body.y + dy;
-  if (!open(lv, s, x, y)) return false;
+  if (!open(lv, s, x, y, a)) return false;
   const ci = crateIndex(s, x, y);
   if (ci >= 0) {
     const cx = x + dx, cy = y + dy;
-    if (!open(lv, s, cx, cy) || crateIndex(s, cx, cy) >= 0 || bodyAt(s, cx, cy)) return false;
+    if (!open(lv, s, cx, cy, a) || crateIndex(s, cx, cy) >= 0 || bodyAt(s, cx, cy)) return false;
     s.crates[ci] = { x: cx, y: cy };
   }
   body.x = x; body.y = y;

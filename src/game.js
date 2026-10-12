@@ -215,6 +215,7 @@ export class Game {
     if (t.k === 'void') return;
     if (t.k === 'wall') { scr.spr('wall', px, py); return; }
     if (t.k === 'emitter') { scr.spr(`emitter_${t.dir}`, px, py); return; }
+    if (t.k === 'oneway') { scr.spr(`oneway_${t.dir}`, px, py); return; }
     if (t.k === 'exit') { scr.spr(Math.floor(this.time * 2) % 2 ? 'exit1' : 'exit0', px, py); return; }
     if (t.k === 'plate') {
       const down = s.player.x === x && s.player.y === y || s.ghosts.some((g) => g.x === x && g.y === y) || s.crates.some((c) => c.x === x && c.y === y);

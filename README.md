@@ -25,13 +25,14 @@ at the same time as walking out the door.
 - **Numbered doors** do the opposite: they shut while their plate is held.
 - **Crates** can be pushed; they hold plates down and block lasers.
 - **Lasers** zap you, but not your echoes, and an echo in the way blocks the beam.
+- **Arrow tiles** can only be stepped (or pushed) onto going the way they point.
 - If there's nothing left to undo, **B** takes back your last echo.
 
 Stuck? After 3 restarts (or a couple of minutes) in a room, the room name at
 the top of the screen turns into a blinking **? SHOW ME** button: the room plays itself so you can watch
 how it's done, then it's your turn.
 
-16 rooms in 4 worlds. Clearing a room gives you a password for the next one
+24 rooms in 6 worlds. Clearing a room gives you a password for the next one
 (NES style), and progress is saved in your browser. In **Settings** you can
 pick the screen colours (6 palettes) and the console's colours (7 shells).
 
@@ -46,6 +47,7 @@ npm install
 npm run dev            # play locally
 npm run build          # build to dist/
 npm run check:levels   # prove every room can be solved, and needs all its echoes
+node scripts/design.mjs 18   # find the fastest solution for a room (while designing)
 ```
 
 - `src/sim.js`: the rules (pure, so undo, echoes and the checker share it)

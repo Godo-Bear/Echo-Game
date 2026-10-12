@@ -15,7 +15,10 @@ The hook: pressing ECHO rewinds the room and a ghost replays your last run.
   runs first). After adding or changing rooms run `npm run check:levels`:
   it replays the solution and proves the room can't be solved with fewer
   echoes than it gives you. `node scripts/solve.mjs <room> <echo runs...>`
-  finds the shortest final run for given echo runs (handy when designing).
+  finds the shortest final run for given echo runs, and
+  `node scripts/design.mjs <room> [echoes]` finds a whole solution (handy
+  when designing; its echo runs can contain pointless moves, so tidy them
+  before using them as the room's `solution`).
 - Each new room should teach or combine ideas; keep the difficulty curve
   gentle and give each room a short hint (shown on its intro card).
 - New rooms need a unique 4-letter `code` (password). The `solution` is

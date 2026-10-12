@@ -90,6 +90,16 @@ function doorOpen(ch, inv, sideways) {
   return g;
 }
 
+// a one-way arrow tile (drawn pointing right, then turned)
+function oneway(dir) {
+  let g = floor();
+  frame(g, 1, 1, 14, 14, '1');
+  stamp(g, rows('#...#..|##..##.|.##..##|##..##.|#...#..'), 4, 5, { '#': '2' });
+  const turns = { R: 0, D: 1, L: 2, U: 3 }[dir];
+  for (let i = 0; i < turns; i++) g = rotate(g);
+  return g;
+}
+
 function exitTile(glow) {
   const g = grid(16, 16, '3');
   rect(g, 1, 1, 14, 2, glow ? '0' : '1'); rect(g, 1, 3, 14, 3, '2');
@@ -178,7 +188,7 @@ export function buildArt() {
       put(`door_${k}_open_side`, doorOpen(ch, inv, true));
     }
   }
-  for (const d of 'UDLR') put(`emitter_${d}`, emitter(d));
+  for (const d of 'UDLR') { put(`emitter_${d}`, emitter(d)); put(`oneway_${d}`, oneway(d)); }
   for (const face of 'UDLR') for (const step of [0, 1]) {
     const g = hero(face, step);
     put(`hero_${face}${step}`, g);

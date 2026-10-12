@@ -127,7 +127,9 @@ function optionsScene(back) {
 function levelsScene(start = 0) {
   let i = start, t = 0;
   const unlocked = (k) => k <= save.unlocked;
-  const cell = (k) => ({ x: 30 + (k % 4) * 32, y: 22 + Math.floor(k / 4) * 25 });
+  // one row of four rooms per world
+  const ROW = 17;
+  const cell = (k) => ({ x: 30 + (k % 4) * 32, y: 19 + Math.floor(k / 4) * ROW });
   return {
     update(dt) { t += dt; },
     input(btn) {
@@ -142,13 +144,13 @@ function levelsScene(start = 0) {
       scr.clear(0);
       scr.rect(0, 0, W, 16, 3);
       scr.textC('CHOOSE A ROOM', 5, 0);
-      WORLDS.forEach((w, r) => scr.text(String(r + 1), 12, 22 + r * 25 + 6, 2));
+      WORLDS.forEach((w, r) => scr.text(String(r + 1), 14, 19 + r * ROW + 4, 2));
       LEVELS.forEach((_, k) => {
         const { x, y } = cell(k);
-        if (save.done[k]) { scr.rect(x, y, 26, 19, 3); scr.textC(String(k + 1).padStart(2, '0'), y + 6, 0, x + 13); }
-        else if (unlocked(k)) { scr.frame(x, y, 26, 19, 3); scr.textC(String(k + 1).padStart(2, '0'), y + 6, 3, x + 13); }
-        else { scr.frame(x, y, 26, 19, 1); scr.spr('lock', x + 10, y + 6, 1); }
-        if (k === i && blink(t, 3)) { scr.frame(x - 2, y - 2, 30, 23, 3); }
+        if (save.done[k]) { scr.rect(x, y, 26, 14, 3); scr.textC(String(k + 1).padStart(2, '0'), y + 4, 0, x + 13); }
+        else if (unlocked(k)) { scr.frame(x, y, 26, 14, 3); scr.textC(String(k + 1).padStart(2, '0'), y + 4, 3, x + 13); }
+        else { scr.frame(x, y, 26, 14, 1); scr.spr('lock', x + 11, y + 4, 1); }
+        if (k === i && blink(t, 3)) { scr.frame(x - 2, y - 2, 30, 18, 3); }
       });
       scr.rect(0, 122, W, 22, 3);
       const w = WORLDS[worldOf(i)];
