@@ -3,14 +3,19 @@ import { parseLevel, initialState, simulate, step, nextGhostActs, tileAt } from 
 import { sfx } from './audio.js';
 import { W } from './render.js';
 import { textWidth } from './font.js';
+import { track } from './achievements.js';
 
 const TWEEN = 0.11;
 const ARROW = { U: 'arrowU', D: 'arrowD', L: 'arrowL', R: 'arrowR' };
 
 export class Game {
-  constructor(def, index) {
+  // tag: the 2-letter label in the corner (room number, DY for the daily...)
+  // quiet: a SHOW ME demo, which doesn't count towards trophies
+  constructor(def, tag, quiet = false) {
     this.def = def;
-    this.index = index;
+    this.tag = tag;
+    this.quiet = quiet;
+    this.waitRun = 0;
     this.lv = parseLevel(def);
     this.runs = [];   // finished runs, each replayed by an echo
     this.moves = [];  // this run so far
@@ -63,6 +68,8 @@ export class Game {
     const next = step(this.lv, before, this.runs, a);
     if (!next) { sfx.bump(); this.shake = 0.12; if (a !== 'W') this.facings.player = a; return; }
     this.moves.push(a);
+    this.waitRun = a === 'W' ? this.waitRun + 1 : 0;
+    if (this.waitRun === 10 && !this.quiet) track('wait', 10);
     this.prev = before;
     this.state = next;
     this.anim = 0;
@@ -72,7 +79,7 @@ export class Game {
   }
 
   sounds(a, b, act) {
-    if (b.zapped) { sfx.zap(); this.shake = 0.3; this.retries++; return; }
+    if (b.zapped) { sfx.zap(); this.shake = 0.3; this.retries++; if (!this.quiet) track('zap'); return; }
     const crateMoved = a.crates.some((c, i) => c.x !== b.crates[i].x || c.y !== b.crates[i].y);
     const opened = b.doorOpen.some((o, i) => o && !a.doorOpen[i]);
     const shut = b.doorOpen.some((o, i) => !o && a.doorOpen[i]);
@@ -95,6 +102,7 @@ export class Game {
     this.rebuild();
     this.rewind = 0.5;
     sfx.echo();
+    if (!this.quiet) track('echo');
     const left = this.def.echoes - this.runs.length;
     this.toast(`ECHO ${this.runs.length}!`);
     this.toastAfter = left === 0 ? 'NO ECHOES LEFT' : '';
@@ -106,6 +114,7 @@ export class Game {
       this.moves.pop();
       this.rebuild(before);
       sfx.undo();
+      if (!this.quiet) track('undo');
     } else if (this.runs.length) {
       this.moves = this.runs.pop();
       this.rebuild();
@@ -245,7 +254,7 @@ export class Game {
 
   drawHud(scr) {
     scr.rect(0, 0, W, 16, 3);
-    scr.text(String(this.index + 1).padStart(2, '0'), 4, 5, 0);
+    scr.text(this.tag, 4, 5, 0);
     const n = this.def.echoes;
     if (this.hintReady) {
       // stuck? the room name becomes a SHOW ME button (tap the top bar)
