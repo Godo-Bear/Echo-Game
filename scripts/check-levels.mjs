@@ -9,7 +9,7 @@
 // SHOW=1 prints any shortcut it finds)
 import { LEVELS } from '../src/levels.js';
 import { parseLevel, initialState, simulate } from '../src/sim.js';
-import { search } from './search.mjs';
+import { search } from '../src/search.js';
 
 const only = process.argv[2] ? Number(process.argv[2]) : null;
 

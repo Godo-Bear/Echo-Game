@@ -3,7 +3,7 @@
 //   node scripts/design.mjs 18 [echoes]
 import { LEVELS } from '../src/levels.js';
 import { parseLevel } from '../src/sim.js';
-import { search } from './search.mjs';
+import { search } from '../src/search.js';
 
 const def = LEVELS[Number(process.argv[2]) - 1];
 const k = process.argv[3] !== undefined ? Number(process.argv[3]) : def.echoes;

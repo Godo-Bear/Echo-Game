@@ -77,8 +77,12 @@ export class Game {
     const opened = b.doorOpen.some((o, i) => o && !a.doorOpen[i]);
     const shut = b.doorOpen.some((o, i) => !o && a.doorOpen[i]);
     const plates = 'abc'.split('').some((ch) => a.pressed[ch] !== b.pressed[ch]);
-    if (crateMoved) sfx.push();
+    const warped = b.player.warped || b.ghosts.some((g) => g.warped) || b.crates.some((c) => c.warped);
+    const flipped = 'abc'.split('').some((ch) => a.toggles[ch] !== b.toggles[ch]);
+    if (warped) sfx.warp();
+    else if (crateMoved) sfx.push();
     else if (act !== 'W') sfx.step();
+    if (flipped) sfx.lever();
     if (opened) sfx.doorOpen(); else if (shut) sfx.doorShut(); else if (plates) sfx.plate();
   }
 
@@ -132,6 +136,7 @@ export class Game {
 
   // ---------- drawing ----------
   pos(prev, cur) {
+    if (cur.warped) return cur; // teleported: jump, don't slide across
     const k = this.anim / TWEEN;
     const e = k * (2 - k);
     return { x: prev.x + (cur.x - prev.x) * e, y: prev.y + (cur.y - prev.y) * e };
@@ -216,6 +221,11 @@ export class Game {
     if (t.k === 'wall') { scr.spr('wall', px, py); return; }
     if (t.k === 'emitter') { scr.spr(`emitter_${t.dir}`, px, py); return; }
     if (t.k === 'oneway') { scr.spr(`oneway_${t.dir}`, px, py); return; }
+    if (t.k === 'belt') { scr.spr(`belt_${t.dir}${Math.floor(this.time * 6) % 2}`, px, py); return; }
+    if (t.k === 'ice') { scr.spr('ice', px, py); return; }
+    if (t.k === 'gate') { scr.spr('gate', px, py); return; }
+    if (t.k === 'tele') { scr.spr(`tele_${t.ch}${Math.floor(this.time * 3) % 2}`, px, py); return; }
+    if (t.k === 'lever') { scr.spr(`lever_${t.ch}${s.toggles[t.ch] ? 1 : 0}`, px, py); return; }
     if (t.k === 'exit') { scr.spr(Math.floor(this.time * 2) % 2 ? 'exit1' : 'exit0', px, py); return; }
     if (t.k === 'plate') {
       const down = s.player.x === x && s.player.y === y || s.ghosts.some((g) => g.x === x && g.y === y) || s.crates.some((c) => c.x === x && c.y === y);

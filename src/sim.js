@@ -13,6 +13,17 @@
 //   > < ^ v  laser emitters, firing that way
 //   R L U D  one-way arrows: can only be stepped onto (or pushed onto) going
 //            that way. Leaving them is free; lasers pass over them.
+//   → ← ↑ ↓  conveyor belts: at the end of every turn they carry whatever is
+//            on them (you, echoes, crates) one square their way.
+//   ~  ice: anything that moves onto it keeps sliding the same way until it
+//      reaches a non-ice square or something stops it (echoes can't stop you).
+//   x y z  teleporters, in pairs: arrive on one and you pop out of the other
+//          (if nothing's in the way there).
+//   f g h  levers for a / b / c: every time something steps onto one it flips.
+//          A flipped lever swaps its doors (A opens, 1 shuts) - plates and
+//          lever work together, so pressing the plate flips them back.
+//   =  ghost gate: you and crates can pass, echoes can't (an echo's move
+//      into it just fails, so it stops there).
 //
 // Each turn: echoes move first (oldest first), then you. Doors use the state
 // they had at the start of the turn, so what you see is what you get. A door
@@ -22,18 +33,20 @@
 
 export const DIRS = { U: [0, -1], D: [0, 1], L: [-1, 0], R: [1, 0] };
 const EMIT = { '>': 'R', '<': 'L', '^': 'U', 'v': 'D' };
+const BELT = { '→': 'R', '←': 'L', '↑': 'U', '↓': 'D' };
 
 export function parseLevel(def) {
   const rows = def.map;
   const h = rows.length;
-  const w = Math.max(...rows.map((r) => r.length));
+  const w = Math.max(...rows.map((r) => [...r].length));
   const tiles = [];
   let start = null, exit = null;
-  const crates = [], plates = [], doors = [], emitters = [];
+  const crates = [], plates = [], doors = [], emitters = [], teles = { x: [], y: [], z: [] };
   for (let y = 0; y < h; y++) {
     const row = [];
+    const chars = [...rows[y]];
     for (let x = 0; x < w; x++) {
-      const c = rows[y][x] ?? ' ';
+      const c = chars[x] ?? ' ';
       let t = { k: 'floor' };
       if (c === '#') t = { k: 'wall' };
       else if (c === ' ') t = { k: 'void' };
@@ -44,6 +57,11 @@ export function parseLevel(def) {
       else if ('ABC'.includes(c)) { t = { k: 'door', ch: c.toLowerCase(), inv: false, i: doors.length }; doors.push({ x, y, ch: c.toLowerCase(), inv: false }); }
       else if ('123'.includes(c)) { const ch = 'abc'['123'.indexOf(c)]; t = { k: 'door', ch, inv: true, i: doors.length }; doors.push({ x, y, ch, inv: true }); }
       else if ('RLUD'.includes(c)) t = { k: 'oneway', dir: c };
+      else if (BELT[c]) t = { k: 'belt', dir: BELT[c] };
+      else if (c === '~') t = { k: 'ice' };
+      else if ('xyz'.includes(c)) { t = { k: 'tele', ch: c }; teles[c].push({ x, y }); }
+      else if ('fgh'.includes(c)) t = { k: 'lever', ch: 'abc'['fgh'.indexOf(c)] };
+      else if (c === '=') t = { k: 'gate' };
       else if (EMIT[c]) { t = { k: 'emitter', dir: EMIT[c] }; emitters.push({ x, y, dir: EMIT[c] }); }
       else if (c !== '.') throw new Error(`Unknown map character "${c}" in level "${def.name}"`);
       row.push(t);
@@ -51,7 +69,8 @@ export function parseLevel(def) {
     tiles.push(row);
   }
   if (!start || !exit) throw new Error(`Level "${def.name}" needs a P and an E`);
-  return { ...def, w, h, tiles, start, exit, crates, plates, doors, emitters };
+  for (const [k, v] of Object.entries(teles)) if (v.length && v.length !== 2) throw new Error(`Teleporter ${k} in "${def.name}" needs exactly two pads`);
+  return { ...def, w, h, tiles, start, exit, crates, plates, doors, emitters, teles };
 }
 
 export function tileAt(lv, x, y) {
@@ -73,20 +92,65 @@ function open(lv, s, x, y, dir) {
   return true;
 }
 
+// Can this kind of thing ('player' | 'ghost' | 'crate') move into x,y?
+function canEnter(lv, s, x, y, dir, kind) {
+  if (!open(lv, s, x, y, dir) || crateIndex(s, x, y) >= 0) return false;
+  if (kind === 'ghost' && tileAt(lv, x, y).k === 'gate') return false;
+  if (kind === 'crate' && bodyAt(s, x, y)) return false;
+  return true;
+}
+
+// Something just arrived on its square (moving `dir`): flip levers, slide on
+// ice, take teleporters.
+function arrive(lv, s, obj, dir, kind) {
+  for (let guard = 0; guard < 40; guard++) {
+    const t = tileAt(lv, obj.x, obj.y);
+    if (t.k === 'lever') s.toggles[t.ch] = !s.toggles[t.ch];
+    if (t.k === 'ice' && dir) {
+      const [dx, dy] = DIRS[dir];
+      if (canEnter(lv, s, obj.x + dx, obj.y + dy, dir, kind)) { obj.x += dx; obj.y += dy; continue; }
+    }
+    if (t.k === 'tele') {
+      const other = lv.teles[t.ch].find((p) => p.x !== obj.x || p.y !== obj.y);
+      const free = crateIndex(s, other.x, other.y) < 0 && (kind !== 'crate' || !bodyAt(s, other.x, other.y));
+      if (free) { obj.x = other.x; obj.y = other.y; obj.warped = true; }
+    }
+    return;
+  }
+}
+
 // Try to move one body. Returns true if it moved (or waited).
-function tryMove(lv, s, body, a) {
+function tryMove(lv, s, body, a, kind) {
   if (a === 'W') return true;
   const [dx, dy] = DIRS[a];
   const x = body.x + dx, y = body.y + dy;
   if (!open(lv, s, x, y, a)) return false;
+  if (kind === 'ghost' && tileAt(lv, x, y).k === 'gate') return false;
   const ci = crateIndex(s, x, y);
   if (ci >= 0) {
-    const cx = x + dx, cy = y + dy;
-    if (!open(lv, s, cx, cy, a) || crateIndex(s, cx, cy) >= 0 || bodyAt(s, cx, cy)) return false;
-    s.crates[ci] = { x: cx, y: cy };
+    if (!canEnter(lv, s, x + dx, y + dy, a, 'crate')) return false;
+    const c = { x: x + dx, y: y + dy };
+    s.crates[ci] = c;
+    arrive(lv, s, c, a, 'crate');
   }
   body.x = x; body.y = y;
+  arrive(lv, s, body, a, kind);
   return true;
+}
+
+// End of the turn: conveyor belts carry everything on them one square.
+function belts(lv, s) {
+  const on = (o) => tileAt(lv, o.x, o.y).k === 'belt';
+  const crates = s.crates.filter(on);
+  const bodies = [[s.player, 'player'], ...s.ghosts.map((g) => [g, 'ghost'])].filter(([b]) => on(b));
+  for (const c of crates) {
+    const dir = tileAt(lv, c.x, c.y).dir, [dx, dy] = DIRS[dir];
+    if (canEnter(lv, s, c.x + dx, c.y + dy, dir, 'crate')) { c.x += dx; c.y += dy; arrive(lv, s, c, dir, 'crate'); }
+  }
+  for (const [b, kind] of bodies) {
+    const dir = tileAt(lv, b.x, b.y).dir, [dx, dy] = DIRS[dir];
+    if (canEnter(lv, s, b.x + dx, b.y + dy, dir, kind)) { b.x += dx; b.y += dy; arrive(lv, s, b, dir, kind); }
+  }
 }
 
 // Work out plates, doors and laser beams for a state (after everyone moved).
@@ -98,7 +162,9 @@ function settle(lv, s) {
     pressed[ch] = ps.length > 0 && ps.every((p) => occupied(p.x, p.y));
   }
   s.pressed = pressed;
-  s.doorOpen = lv.doors.map((d) => (d.inv ? !pressed[d.ch] : pressed[d.ch]) || occupied(d.x, d.y));
+  // a flipped lever swaps what its plates do
+  const active = (ch) => pressed[ch] !== s.toggles[ch];
+  s.doorOpen = lv.doors.map((d) => (d.inv ? !active(d.ch) : active(d.ch)) || occupied(d.x, d.y));
 
   // Lasers
   s.beams = [];
@@ -129,6 +195,7 @@ export function initialState(lv, ghostCount = 0) {
     ghosts: Array.from({ length: ghostCount }, () => ({ x: lv.start.x, y: lv.start.y, moved: false })),
     crates: lv.crates.map((c) => ({ ...c })),
     doorOpen: lv.doors.map(() => false),
+    toggles: { a: false, b: false, c: false },
   };
   return settle(lv, s);
 }
@@ -136,10 +203,11 @@ export function initialState(lv, ghostCount = 0) {
 function clone(s) {
   return {
     tick: s.tick,
-    player: { ...s.player },
-    ghosts: s.ghosts.map((g) => ({ ...g })),
-    crates: s.crates.map((c) => ({ ...c })),
+    player: { x: s.player.x, y: s.player.y, alive: s.player.alive },
+    ghosts: s.ghosts.map((g) => ({ x: g.x, y: g.y })),
+    crates: s.crates.map((c) => ({ x: c.x, y: c.y })),
     doorOpen: s.doorOpen.slice(),
+    toggles: { ...s.toggles },
   };
 }
 
@@ -149,11 +217,14 @@ function clone(s) {
 export function stepWith(lv, s, ghostActs, act) {
   if (!s.player.alive || s.won) return null;
   const n = clone(s);
+  n.player.warped = false;
   n.ghosts.forEach((g, i) => {
     const a = ghostActs[i] || 'W';
-    g.moved = a !== 'W' && tryMove(lv, n, g, a);
+    g.warped = false;
+    g.moved = a !== 'W' && tryMove(lv, n, g, a, 'ghost');
   });
-  if (!tryMove(lv, n, n.player, act) && act !== 'W') return null;
+  if (!tryMove(lv, n, n.player, act, 'player') && act !== 'W') return null;
+  belts(lv, n);
   n.tick = s.tick + 1;
   return settle(lv, n);
 }

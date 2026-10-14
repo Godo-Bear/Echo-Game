@@ -1,5 +1,5 @@
 // The 160x144 "Game Boy" screen: palettes, cached sprites, text and fades.
-import { buildArt } from './sprites.js';
+import { buildArt, heroArt } from './sprites.js';
 import { FONT, LINE_H, textWidth, wrap } from './font.js';
 
 export const W = 160, H = 144;
@@ -12,6 +12,12 @@ export const PALETTES = [
   { name: 'BERRY', c: ['#f8e3e8', '#e08da5', '#8a3f6e', '#2b0f2e'] },
   { name: 'AMBER', c: ['#fff2c4', '#f7b346', '#a05a21', '#2e1408'] },
   { name: 'MONO', c: ['#ffffff', '#aaaaaa', '#555555', '#000000'] },
+  // unlocked with trophies (see achievements.js)
+  { name: 'VIRTUAL', c: ['#ff4040', '#b01818', '#600808', '#100000'] },
+  { name: 'SPOOKY', c: ['#d8f0a8', '#8a9a4a', '#5a2a7a', '#1a0a26'] },
+  { name: 'NEON', c: ['#f0fbff', '#3ce8ff', '#e0309a', '#14082a'] },
+  { name: 'CANDY', c: ['#fff4fa', '#ffaad2', '#6ccdb8', '#3b2350'] },
+  { name: 'GOLD', c: ['#fff6cf', '#e8c35a', '#9a6a1c', '#2e1d06'] },
 ];
 
 const ART = buildArt();
@@ -24,6 +30,12 @@ export class Screen {
     this.ctx.imageSmoothingEnabled = false;
     this.cache = new Map();
     this.setPalette(0);
+  }
+
+  // swap the hero's look (and its echoes) for another character
+  setHero(name) {
+    Object.assign(ART, heroArt(name));
+    this.cache.clear();
   }
 
   setPalette(i) {

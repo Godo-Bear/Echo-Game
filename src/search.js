@@ -1,8 +1,9 @@
-// The exact search behind check-levels.mjs and design.mjs: plays every run
+// The exact search behind the level checker, the room editor's check and the
+// design scripts: plays every run
 // at once, each in its own copy of the room (run 1 alone, run 2 with run 1's
 // echo replaying, ...). Every run's moves must work in its own copy, like
 // when you recorded it, so it finds exactly the solutions a player could.
-import { initialState, stepWith } from '../src/sim.js';
+import { initialState, stepWith } from './sim.js';
 
 const ACTS = ['U', 'D', 'L', 'R', 'W'];
 
@@ -12,7 +13,7 @@ function toRuns(path, echoes) {
 }
 
 const worldKey = (s) => s.player.alive
-  ? s.player.x + ',' + s.player.y + '/' + s.ghosts.map((g) => g.x + ',' + g.y).join(';') + '/' + s.crates.map((c) => c.x + ',' + c.y).sort().join(';')
+  ? s.player.x + ',' + s.player.y + '/' + s.ghosts.map((g) => g.x + ',' + g.y).join(';') + '/' + s.crates.map((c) => c.x + ',' + c.y).sort().join(';') + '/' + (s.toggles.a ? 1 : 0) + (s.toggles.b ? 1 : 0) + (s.toggles.c ? 1 : 0)
   : 'x';
 
 // Fewest turns to win using `echoes` echoes: { turns, runs }, turns -1 if

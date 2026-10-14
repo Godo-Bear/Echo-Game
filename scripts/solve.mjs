@@ -11,7 +11,7 @@ const runs = runArgs.map((r) => r.split(''));
 const longest = Math.max(0, ...runs.map((r) => r.length));
 const ACTS = ['U', 'D', 'L', 'R', 'W'];
 
-const key = (s) => [s.player.x, s.player.y, Math.min(s.tick, longest + 1), s.ghosts.map((g) => g.x + ',' + g.y).join(';'), s.crates.map((c) => c.x + ',' + c.y).sort().join(';')].join('|');
+const key = (s) => [s.player.x, s.player.y, Math.min(s.tick, longest + 1), s.ghosts.map((g) => g.x + ',' + g.y).join(';'), s.crates.map((c) => c.x + ',' + c.y).sort().join(';'), JSON.stringify(s.toggles)].join('|');
 let frontier = [{ s: initialState(lv, runs.length), path: '' }];
 const seen = new Set([key(frontier[0].s)]);
 while (frontier.length) {

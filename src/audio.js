@@ -99,6 +99,9 @@ export const sfx = {
     ['C6', 'G5', 'E5', 'C5', 'G4', 'C4'].forEach((n, i) => tone({ f: freq(n), d: 0.07, wave: 0.25, vol: 0.35 - i * 0.04, t: i * 0.05 }));
     ['C6', 'G5', 'E5'].forEach((n, i) => tone({ f: freq(n), d: 0.07, wave: 0.125, vol: 0.12, t: 0.32 + i * 0.05 }));
   }),
+  warp: play(() => { tone({ f: [300, 1600], d: 0.16, wave: 0.125, vol: 0.3 }); tone({ f: [1600, 400], d: 0.12, wave: 0.25, vol: 0.2, t: 0.12 }); }),
+  lever: play(() => { tone({ f: 220, d: 0.03, wave: 0.5, vol: 0.35 }); tone({ f: 880, d: 0.05, wave: 0.25, vol: 0.3, t: 0.04 }); }),
+  achieve: play(() => ['G5', 'C6', 'E6', 'G6'].forEach((n, i) => tone({ f: freq(n), d: 0.08, wave: 0.25, vol: 0.3, t: i * 0.07 }))),
   undo: play(() => tone({ f: [520, 330], d: 0.06, wave: 0.25, vol: 0.3 })),
   zap: play(() => { tone({ f: [1400, 90], d: 0.35, wave: 0.5, vol: 0.35 }); noise({ d: 0.3, vol: 0.4 }); }),
   win: play(() => {
