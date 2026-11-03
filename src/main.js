@@ -15,6 +15,7 @@ import { save, store } from './save.js';
 import { textWidth, wrap } from './font.js';
 import { SHELLS, applyShell } from './shells.js';
 import { HEROES } from './sprites.js';
+import { LOGO_W, eachLogoPixel } from './logo.js';
 import { TROPHIES, onTrophy, checkTrophies, track, has, isUnlocked } from './achievements.js';
 import { dailyDef, dailyCleared, currentStreak } from './daily.js';
 import { TOOLS, blankRoom, roomProblem, encodeRoom, decodeRoom, gridToMap, roomLink, ROOM_W, ROOM_H } from './roomcode.js';
@@ -123,13 +124,9 @@ function titleScene() {
     draw() {
       scr.clear(0);
       // the logo, with its echoes trailing behind
-      const s = 3, lw = scr.bigWidth('ECHO', s), lx = Math.round((W - lw) / 2);
-      for (let k = 3; k >= 1; k--) {
-        const off = Math.round(k * 2 * (0.6 + 0.4 * Math.sin(t * 2)));
-        scr.big('ECHO', lx + off, 8 + off, s, k === 1 ? 2 : 1);
-      }
-      scr.big('ECHO', lx, 8, s, 3);
-      scr.textC('A PUZZLE IN TIME', 38, 2);
+      const s = 2, lx = Math.round((W - (LOGO_W + 4) * s) / 2);
+      eachLogoPixel((x, y, c) => scr.rect(lx + x * s, 4 + y * s, s, s, c), 0.6 + 0.4 * Math.sin(t * 2));
+      scr.textC('A PUZZLE IN TIME', 41, 2);
       m.draw(44, 52, 10);
       if (currentStreak()) scr.text(`${currentStreak()}♥`, 4, 2, 2);
       // a little parade along the bottom

@@ -1,3 +1,5 @@
+<p align="center"><img src="public/logo-card.png" alt="ECHO: a puzzle in time" width="480"></p>
+
 # Echo
 
 A retro, Game Boy-style puzzle game for the browser.
